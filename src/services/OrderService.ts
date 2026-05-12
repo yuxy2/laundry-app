@@ -42,14 +42,14 @@ export const processMidtransWebhook = async (body: any) => {
     throw new Error("Invalid signature key for Midtrans webhook");
   }
 
+  const order = await Order.findById(order_id);
+
+  if (!order) {
+    throw new Error("Order not found");
+  }
+
   if (transaction_status == "capture" || transaction_status == "settlement") {
     if (fraud_status == "accept" || !fraud_status) {
-      const order = await Order.findById(order_id);
-
-      if (!order) {
-        throw new Error("Order not found");
-      }
-
       order.totalAmount = parseFloat(gross_amount);
       
       // Hitung komisi (Misal Admin memotong 10%)
@@ -59,9 +59,19 @@ export const processMidtransWebhook = async (body: any) => {
       order.adminFee = adminFee;
       order.partnerRevenue = partnerRevenue;
       
-      order.status = "paid" as "placed" | "paid" | "inProgress" | "outForDelivery" | "delivered";
+      order.status = "paid";
       await order.save();
     }
+  } else if (
+    transaction_status == "cancel" ||
+    transaction_status == "deny" ||
+    transaction_status == "expire"
+  ) {
+    order.status = "cancelled";
+    await order.save();
+  } else if (transaction_status == "pending") {
+    order.status = "placed";
+    await order.save();
   }
 };
 
@@ -107,7 +117,28 @@ export const createCheckoutSession = async (
     item_details: itemDetails,
   };
 
-  const transaction = await snap.createTransaction(parameter);
+  const url = MIDTRANS_IS_PRODUCTION
+    ? "https://app.midtrans.com/snap/v1/transactions"
+    : "https://app.sandbox.midtrans.com/snap/v1/transactions";
+
+  const backendUrl = process.env.BACKEND_URL || "https://your-domain.com"; // Set BACKEND_URL in your .env
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Authorization: `Basic ${Buffer.from(MIDTRANS_SERVER_KEY + ":").toString("base64")}`,
+      "X-Override-Notification": `${backendUrl}/api/order/checkout/webhook`,
+    },
+    body: JSON.stringify(parameter),
+  });
+
+  const transaction = await response.json();
+  
+  if (!response.ok) {
+    throw new Error(transaction.error_messages?.[0] || "Failed to create Midtrans transaction");
+  }
 
   await newOrder.save();
   return transaction.redirect_url;

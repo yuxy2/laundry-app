@@ -173,6 +173,8 @@ Membuat toko laundry baru (Buka Toko).
   - `estimatedDeliveryTime`: perkiraan jam selesai
   - `facilities`: array (atau JSON string fasilitas)
   - `services`: array (JSON layanan: harga, dsb)
+  - `latitude`: angka / decimal koordinat GPS (opsional)
+  - `longitude`: angka / decimal koordinat GPS (opsional)
   - `imageFile`: **(File Image .png / .jpg)**
 
 ### `PUT /`
@@ -208,3 +210,40 @@ Mendapatkan tabel daftar seluruh user yang terdaftar pada sistem (termasuk Partn
 ### `GET /laundries`
 Mendapatkan tabel seluruh toko laundry beserta profile (Nama & email) pemiliknya yang tersebar di sistem.
 - **Otentikasi:** Ya (Khusus Admin)
+
+---
+
+## 7. Withdrawal API 💸 (Pencairan Dana Mitra)
+Base URL: `/api/withdrawal`
+Sistem komisi di mana Mitra menarik saldo penghasilannya (setelah dipotong komisi admin 10% di setiap transaksi sukses).
+
+### `POST /request`
+Mengajukan permohonan penarikan dana/saldo bagi Mitra yang sedang login.
+- **Otentikasi:** Ya (Mitra)
+- **Body JSON:**
+```json
+{
+  "amount": 50000,
+  "bankName": "BCA",
+  "bankAccountName": "Budi Santoso",
+  "bankAccountNumber": "1234567890"
+}
+```
+
+### `GET /my`
+Mendapatkan histori atau riwayat pengajuan penarikan dana milik Mitra yang sedang login.
+- **Otentikasi:** Ya (Mitra)
+
+### `GET /all`
+Mendapatkan semua riwayat penarikan dana dari seluruh mitra di sistem (untuk diulas dan disetujui Admin).
+- **Otentikasi:** Ya (Khusus Admin)
+
+### `PATCH /:id/status`
+Digunakan Admin untuk menerima (approve) atau menolak (reject) pengajuan dana Mitra.
+- **Otentikasi:** Ya (Khusus Admin)
+- **Body JSON:**
+```json
+{
+  "status": "approved" // atau "rejected"
+}
+```
