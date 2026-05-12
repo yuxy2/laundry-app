@@ -41,7 +41,7 @@ const getDashboardStats = async (req: Request, res: Response) => {
       totalUsers,
       totalLaundries,
       totalOrders,
-      totalRevenue
+      revenue: totalRevenue
     }, "Dashboard statistics fetched successfully");
   } catch (error) {
     console.log("error", error);
