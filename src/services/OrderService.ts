@@ -237,7 +237,7 @@ export const createPaymentForChargedOrder = async (userId: string, orderId: stri
   if (!order) {
     throw new Error("Order not found");
   }
-  if (order.user.toString() !== userId) {
+  if (!order.user || order.user.toString() !== userId) {
     throw new Error("Unauthorized");
   }
   if (order.status === "paid") {
@@ -253,11 +253,11 @@ export const createPaymentForChargedOrder = async (userId: string, orderId: stri
       gross_amount: order.totalAmount,
     },
     customer_details: {
-      first_name: order.deliveryDetails.name,
-      email: order.deliveryDetails.email,
+      first_name: order.deliveryDetails?.name || "Pelanggan",
+      email: order.deliveryDetails?.email || "",
       billing_address: {
-        address: order.deliveryDetails.addressLine1,
-        city: order.deliveryDetails.city,
+        address: order.deliveryDetails?.addressLine1 || "",
+        city: order.deliveryDetails?.city || "",
       }
     },
   };
