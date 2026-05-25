@@ -27,8 +27,8 @@ const midtransWebhookHandler = async (req: Request, res: Response) => {
 const createCheckoutSession = async (req: Request, res: Response) => {
   try {
     const checkoutSessionRequest = req.body;
-    const url = await OrderService.createCheckoutSession(req.userId, checkoutSessionRequest);
-    return sendSuccess(res, { url }, "Checkout session created successfully");
+    const result = await OrderService.createCheckoutSession(req.userId, checkoutSessionRequest);
+    return sendSuccess(res, result, "Checkout session created successfully");
   } catch (error: any) {
     console.log(error);
     
@@ -41,8 +41,51 @@ const createCheckoutSession = async (req: Request, res: Response) => {
   }
 };
 
+const createMembershipSubscription = async (req: Request, res: Response) => {
+  try {
+    const { planType } = req.body;
+    if (!planType || (planType !== "regular" && planType !== "premium")) {
+      return sendError(res, "Invalid plan type", 400);
+    }
+    const url = await OrderService.createMembershipSubscription(req.userId, planType);
+    return sendSuccess(res, { url }, "Membership subscription checkout URL created successfully");
+  } catch (error: any) {
+    console.log(error);
+    return sendError(res, error.message, 500);
+  }
+};
+
+const weighOrder = async (req: Request, res: Response) => {
+  try {
+    const { orderId } = req.params;
+    const { weight } = req.body;
+    if (weight === undefined || isNaN(Number(weight)) || Number(weight) < 0) {
+      return sendError(res, "Invalid weight value", 400);
+    }
+    const order = await OrderService.weighOrder(orderId, Number(weight));
+    return sendSuccess(res, order, "Order weighed successfully");
+  } catch (error: any) {
+    console.log(error);
+    return sendError(res, error.message, 500);
+  }
+};
+
+const payChargedOrder = async (req: Request, res: Response) => {
+  try {
+    const { orderId } = req.params;
+    const url = await OrderService.createPaymentForChargedOrder(req.userId, orderId);
+    return sendSuccess(res, { url }, "Payment URL generated successfully");
+  } catch (error: any) {
+    console.log(error);
+    return sendError(res, error.message, 500);
+  }
+};
+
 export default {
   getMyOrders,
   createCheckoutSession,
   midtransWebhookHandler,
+  createMembershipSubscription,
+  weighOrder,
+  payChargedOrder,
 };

@@ -24,6 +24,13 @@ const orderSchema = new mongoose.Schema({
   adminFee: { type: Number, default: 0 },
   partnerRevenue: { type: Number, default: 0 },
   isBalancePaid: { type: Boolean, default: false },
+  paymentMethod: {
+    type: String,
+    enum: ["payLater", "quota"],
+    default: "payLater",
+  },
+  weight: { type: Number, default: 0 },
+  isWeighed: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
 });
 

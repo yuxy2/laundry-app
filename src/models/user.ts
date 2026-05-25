@@ -31,6 +31,23 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  isMember: {
+    type: Boolean,
+    default: false,
+  },
+  memberType: {
+    type: String,
+    enum: ["none", "regular", "premium"],
+    default: "none",
+  },
+  quotaRemaining: {
+    type: Number,
+    default: 0,
+  },
+  memberExpiresAt: {
+    type: Date,
+    default: null,
+  },
 });
 
 const User = mongoose.model("User", userSchema);
